@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Novel2Script</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace" aria-label="Novel2Script workspace">
+        <header class="topbar">
+          <div class="brand-block">
+            <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+            <div>
+              <h1>Novel2Script</h1>
+              <p>创作者工作台</p>
+            </div>
+          </div>
+          <nav class="top-nav" aria-label="主导航">
+            <button class="is-active" type="button" data-view="workbench">小说转剧本</button>
+            <button type="button" data-view="projects">项目管理</button>
+            <button type="button" data-view="history">历史记录</button>
+            <button type="button" data-view="export">导出</button>
+            <button type="button" data-view="settings">设置</button>
+          </nav>
+          <div class="top-actions">
+            <div class="llm-badge" id="llmBadge" title="LLM 状态">
+              <span id="llmDot"></span>
+              <strong id="llmMode">Mock</strong>
+              <small id="llmModel">local</small>
+            </div>
+            <button class="icon-button" id="importButton" type="button" title="导入小说文件"><span aria-hidden="true">⇧</span></button>
+            <button class="icon-button" id="sampleButton" type="button" title="填入示例"><span aria-hidden="true">◉</span></button>
+            <button class="icon-button" id="clearButton" type="button" title="清空"><span aria-hidden="true">×</span></button>
+            <input id="novelFileInput" type="file" accept=".txt,.md,.text,text/plain,text/markdown" hidden />
+          </div>
+        </header>
+
+        <section class="view-panel is-active" data-view-panel="workbench">
+          <section class="metrics" aria-label="文本统计">
+            <div><span id="charCount">0</span><small>小说字数</small></div>
+            <div><span id="characterTotal">0</span><small>识别角色</small></div>
+            <div><span id="sceneCount">0</span><small>拆分场景</small></div>
+            <div><span id="statusMetric">待生成</span><small>生成状态</small></div>
+          </section>
+
+          <section class="editor-grid">
+            <form class="panel input-panel" id="convertForm">
+              <div class="panel-head">
+                <div>
+                  <h2>原文工作台</h2>
+                  <p id="inputState">上传或粘贴要解析的小说</p>
+                </div>
+                <div class="split-actions">
+                  <button class="icon-button" id="saveProjectButton" type="button" title="保存为项目"><span aria-hidden="true">＋</span></button>
+                  <button class="secondary-button" id="importInlineButton" type="button"><span class="button-icon" aria-hidden="true">⇧</span><span>上传小说</span></button>
+                  <button class="secondary-button" id="analyzeButton" type="button"><span class="button-icon" aria-hidden="true">⌁</span><span>解析小说</span></button>
+                  <button class="primary-button" id="convertButton" type="submit"><span class="button-icon" aria-hidden="true">▶</span><span>生成剧本</span></button>
+                </div>
+              </div>
+
+              <label class="field"><span>作品名称</span><input id="titleInput" name="title" type="text" placeholder="请输入作品名称" autocomplete="off" /></label>
+
+              <label class="field grow"><span>小说正文</span><textarea id="novelInput" name="novel_text" placeholder="上传 TXT/Markdown 文件，或在这里粘贴小说正文。" spellcheck="false"></textarea></label>
+            </form>
+
+            <section class="panel output-panel" aria-label="剧本输出">
+              <div class="panel-head">
+                <div><h2>剧本结果</h2><p id="outputState">请上传要解析的小说</p></div>
+                <div class="output-actions">
+                  <button class="icon-button" id="copyButton" type="button" title="复制当前视图"><span aria-hidden="true">⧉</span></button>
+                  <button class="icon-button" id="storyboardButton" type="button" title="生成分镜"><span aria-hidden="true">▦</span></button>
+                  <button class="icon-button" id="downloadButton" type="button" title="下载当前视图"><span aria-hidden="true">↓</span></button>
+                </div>
+              </div>
+              <div class="result-tabs" role="tablist" aria-label="结果视图">
+                <button class="is-active" type="button" data-tab="preview">剧本预览</button>
+                <button type="button" data-tab="characters">角色表</button>
+                <button type="button" data-tab="scenes">场景表</button>
+                <button type="button" data-tab="storyboard">分镜表</button>
+                <button type="button" data-tab="yaml">YAML</button>
+                <button type="button" data-tab="json">JSON</button>
+              </div>
+              <div class="result-wrap">
+                <div class="tab-panel is-active" id="previewPanel"></div>
+                <div class="tab-panel" id="charactersPanel"></div>
+                <div class="tab-panel" id="scenesPanel"></div>
+                <div class="tab-panel" id="storyboardPanel"></div>
+                <pre class="tab-panel code-panel" id="yamlOutput" tabindex="0"></pre>
+                <pre class="tab-panel code-panel" id="jsonOutput" tabindex="0"></pre>
+              </div>
+            </section>
+          </section>
+        </section>
+
+        <section class="view-panel" data-view-panel="projects">
+          <section class="panel">
+            <div class="panel-head">
+              <div><h2>项目管理</h2><p id="projectCount">暂无项目</p></div>
+              <div class="output-actions">
+                <button class="primary-button" id="newProjectButton" type="button">新建项目</button>
+                <button class="icon-button" id="importProjectButton" type="button" title="导入小说"><span aria-hidden="true">⇧</span></button>
+              </div>
+            </div>
+            <input id="projectSearch" type="search" placeholder="搜索项目" />
+            <div class="card-grid" id="projectList"></div>
+          </section>
+        </section>
+
+        <section class="view-panel" data-view-panel="history">
+          <section class="panel history-panel" aria-label="历史记录">
+            <div class="panel-head">
+              <div><h2>历史记录</h2><p id="historyCount">暂无记录</p></div>
+              <button class="icon-button" id="clearHistoryButton" type="button" title="清空历史"><span aria-hidden="true">⌫</span></button>
+            </div>
+            <div class="filter-row" id="historyFilters">
+              <button class="is-active" type="button" data-history-filter="全部">全部</button>
+              <button type="button" data-history-filter="解析小说">解析小说</button>
+              <button type="button" data-history-filter="剧本生成">剧本生成</button>
+              <button type="button" data-history-filter="生成分镜">生成分镜</button>
+              <button type="button" data-history-filter="导出记录">导出记录</button>
+            </div>
+            <div class="history-list" id="historyList"></div>
+          </section>
+        </section>
+
+        <section class="view-panel" data-view-panel="export">
+          <section class="panel">
+            <div class="panel-head"><div><h2>导出中心</h2><p>选择格式并导出当前剧本</p></div></div>
+            <div class="export-layout">
+              <div class="export-options">
+                <label><input type="checkbox" checked /> 剧本正文</label>
+                <label><input type="checkbox" checked /> 角色表</label>
+                <label><input type="checkbox" checked /> 场景表</label>
+                <label><input type="checkbox" checked /> 分镜表</label>
+                <label><input type="checkbox" /> YAML 结构</label>
+                <label><input type="checkbox" /> 生成参数</label>
+              </div>
+              <div class="export-buttons">
+                <button type="button" data-export-format="markdown">Markdown</button>
+                <button type="button" data-export-format="txt">TXT</button>
+                <button type="button" data-export-format="json">JSON</button>
+                <button type="button" data-export-format="yaml">YAML</button>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section class="view-panel" data-view-panel="settings">
+          <section class="panel">
+            <div class="panel-head"><div><h2>设置</h2><p>配置模型 API 和系统参数</p></div></div>
+            <div class="settings-panel settings-wide">
+              <label class="field"><span>模型状态</span><input id="modelStatusInput" type="text" value="读取中" readonly /></label>
+              <label class="field"><span>Provider</span><select id="providerSelect"><option>DeepSeek</option><option>OpenAI</option><option>通义千问</option></select></label>
+              <label class="field"><span>模型名称</span><input id="modelNameInput" type="text" value="deepseek-chat" autocomplete="off" /></label>
+              <label class="field"><span>API Key</span><input id="apiKeyInput" type="password" value="************" autocomplete="off" /></label>
+              <label class="field"><span>temperature</span><input id="temperatureInput" type="number" min="0" max="2" step="0.1" value="0.7" /></label>
+              <label class="field"><span>max_tokens</span><input id="maxTokensInput" type="number" min="512" max="32000" step="512" value="4000" /></label>
+              <label class="field"><span>自动保存历史</span><select id="autoSaveHistory"><option value="on">开启</option><option value="off">关闭</option></select></label>
+            </div>
+            <div class="output-actions">
+              <button class="primary-button" id="saveSettingsButton" type="button">保存设置</button>
+              <button class="icon-button" id="resetSettingsButton" type="button" title="恢复默认"><span aria-hidden="true">↺</span></button>
+            </div>
+          </section>
+        </section>
+
+      </section>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
