@@ -16,4 +16,4 @@ Novel2Script 是一个基于 FastAPI 的 AI 小说转剧本网页应用。用户
 - 历史记录：记录解析、生成剧本、生成分镜和导出操作
 - 导出 Markdown、TXT、JSON、YAML
 - SQLite 数据库存储项目、历史记录和设置
-- 支持增强 Mock，也支持切换真实 LLM
+- 支持增强 Mock
